@@ -1,0 +1,4 @@
+# Generated figures — reproducible with: python3 build/make_figures.py
+build/figs/
+__pycache__/
+~$*.docx
