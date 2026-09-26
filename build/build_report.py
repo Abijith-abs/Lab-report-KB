@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Build the ENS5230.5 Laboratory Report 2 Word document."""
-import os, statistics as st
+import os, re, statistics as st
 from docx import Document
 from docx.shared import Pt, Mm, Inches, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
@@ -67,7 +67,7 @@ FIG_ORDER = ['equiv_circuit', 'circuit13', 'ra_meters', 'dt211_shot', 'g211',
              'armature_reaction', 'droop_model', 'efficiency'] + \
             [f'appA{i}' for i in range(1, 9)]
 TAB_ORDER = ['equipment', 'ra_readings', 'dt211', 'dt212', 'k2_fits',
-             'table1', 'ar_departure', 'pred_vs_meas', 'summary']
+             'table1', 'review_answers', 'ar_departure', 'pred_vs_meas', 'summary']
 FN = {k: i+1 for i, k in enumerate(FIG_ORDER)}
 TN = {k: i+1 for i, k in enumerate(TAB_ORDER)}
 def FR(k): return f"Figure {FN[k]}"
@@ -126,6 +126,36 @@ def para(text="", size=None, bold=False, italic=False, align=None,
 
 def h1(t): return doc.add_paragraph(t, style='Heading 1')
 def h2(t): return doc.add_paragraph(t, style='Heading 2')
+def h3(t): return doc.add_paragraph(t, style='Heading 3')
+
+def _emit(p, text, size, bold=False, italic=False):
+    """Add runs to p, turning _{...} markers into true Word subscripts."""
+    for i, chunk in enumerate(re.split(r"_\{([^}]*)\}", text)):
+        if not chunk:
+            continue
+        r = p.add_run(chunk)
+        r.font.name = FONT; r.font.size = size
+        r.bold = bold; r.italic = italic
+        if i % 2:                      # odd chunks are the captured subscripts
+            r.font.subscript = True
+    return p
+
+def question(text):
+    """Quoted question stem, indented and italic, above its answer."""
+    p = doc.add_paragraph()
+    p.paragraph_format.left_indent = Inches(0.35)
+    p.paragraph_format.right_indent = Inches(0.2)
+    p.paragraph_format.space_before = Pt(4); p.paragraph_format.space_after = Pt(4)
+    p.paragraph_format.line_spacing = 1.0
+    p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    return _emit(p, text, Pt(10.5), italic=True)
+
+def answer(letter, text):
+    """Bold 'Answer: (x) ...' line."""
+    p = doc.add_paragraph()
+    p.paragraph_format.space_before = Pt(4); p.paragraph_format.space_after = Pt(4)
+    p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    return _emit(p, f"Answer: ({letter})  {text}", BODY_SIZE, bold=True)
 
 def field(paragraph, instr, result="—"):
     r = paragraph.add_run()
@@ -192,12 +222,18 @@ def table(headers, rows, cap, key, size=9.5, widths=None, align_right_from=1):
     doc.add_paragraph().paragraph_format.space_after = Pt(0)
     return t
 
+_eqn = [0]
+
 def equation(text, number=None):
     p = doc.add_paragraph()
     p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.paragraph_format.space_before = Pt(6); p.paragraph_format.space_after = Pt(6)
     r = p.add_run(text); r.font.name = "Cambria Math"; r.font.size = Pt(11.5)
     if number:
+        _eqn[0] += 1
+        assert number == _eqn[0], (
+            f"equation numbering out of order: emitted ({number}) where "
+            f"({_eqn[0]}) was expected in document order")
         p.paragraph_format.tab_stops.add_tab_stop(Inches(6.25))
         p.add_run("\t")
         rn = p.add_run(f"({number})"); rn.font.name = FONT; rn.font.size = Pt(11)
@@ -570,7 +606,13 @@ table(["Local AC network", "240 V\u1d00\u1d04", "240 V\u1d00\u1d04", "240 V\u1d0
 # ------------------------------------------------------------------ 6.0 ----
 page_break()
 h1("6.0  Answers to Review Questions")
-h2("6.1  Step 12 — relationship between armature voltage and speed")
+para("The Laboratory 2 manual poses two distinct sets of questions: those embedded in the "
+     "procedure itself, which are answered from the data recorded at that point in the "
+     "exercise, and the five multiple-choice review questions printed at the end of the "
+     "exercise. Both sets are answered below.")
+
+h2("6.1  Questions embedded in the experimental procedure")
+h3("6.1.1  Step 12 — relationship between armature voltage and speed")
 para(f"Graph G211 shows that the motor speed is directly proportional to the armature voltage. "
      f"The characteristic is a straight line through, or very close to, the origin: a "
      f"least-squares fit over the full range from 0.43 V to 271.14 V returns R² = {R2_1:.4f} "
@@ -584,7 +626,7 @@ para(f"The graph does confirm that, under no-load conditions and with the field 
      f"negligible, E\u1d04\u1d07\u1d0d\u1da0 is very nearly equal to E\u2090, and the speed is "
      f"therefore proportional to the applied armature voltage.")
 
-h2("6.2  Step 17 — relationship between armature current and torque")
+h3("6.1.2  Step 17 — relationship between armature current and torque")
 para(f"Provided the armature current does not exceed the nominal value, the developed torque is "
      f"directly proportional to the armature current. Over the range up to 1.5 A a "
      f"least-squares fit returns a gradient of {K2_ls:.3f} N·m/A with R² = {R2_2:.4f}, and the "
@@ -597,7 +639,7 @@ para(f"Beyond approximately 1.5 A the measured torque falls increasingly short o
      f"linear extrapolation. This departure is the expected consequence of armature reaction, "
      f"which is discussed in Section 7.2.")
 
-h2("6.3  Step 19 — predicted variation of back-EMF and speed with armature current")
+h3("6.1.3  Step 19 — predicted variation of back-EMF and speed with armature current")
 para(f"The calculations summarised in {TR('table1')} show that both the back-EMF and the speed "
      f"should fall linearly as the armature current increases. The armature voltage is fixed, so "
      f"every additional ampere of armature current adds I\u2090R\u2090 to the ohmic drop and "
@@ -607,7 +649,7 @@ para(f"The calculations summarised in {TR('table1')} show that both the back-EMF
      f"r/min per ampere. Over the range tabulated, the back-EMF is predicted to fall from "
      f"241.49 V to 213.01 V and the speed from 1410.6 r/min to 1244.2 r/min.")
 
-h2("6.4  Step 20 — comparison with measurement and physical explanation")
+h3("6.1.4  Step 20 — comparison with measurement and physical explanation")
 para(f"Graph G212-1 ({FR('g212_1')}) confirms the direction of the prediction. The measured "
      f"speed decreases monotonically as the armature current increases, from 1501.52 r/min at "
      f"0.28 A to 1079.88 r/min at 3.95 A, so the qualitative prediction made in step 19 is "
@@ -626,6 +668,125 @@ para("The physical cause of the speed reduction is the ohmic voltage drop across
      "speed, so the machine settles at a lower speed. Equilibrium is reached when the speed has "
      "fallen far enough for the back-EMF to allow exactly the armature current needed to balance "
      "the applied load torque.")
+
+h2("6.2  End-of-exercise review questions")
+para(f"The five multiple-choice review questions printed at the end of the exercise are "
+     f"reproduced below with the selected answer and the reasoning behind it. Where the "
+     f"question relates to a quantity measured in this exercise, the supporting measurement is "
+     f"cited. {TR('review_answers')} summarises the selected answers.")
+table(["Q", "Answer", "Basis"],
+      [["1", "(a) A linear relationship",
+        "G211 is a straight line; R² = " + f"{R2_1:.4f}"],
+       ["2", "(a) A linear relationship",
+        "G212 is linear below nominal current; R² = " + f"{R2_2:.4f}"],
+       ["3", "(c) The armature resistance",
+        "The volt-ampere method of step 7"],
+       ["4", "(b) It decreases",
+        "Measured droop 1501.52 → 1079.88 r/min"],
+       ["5", "(b) 995 r/min and 875 r/min",
+        "n = K\u2081(E\u2090 − I\u2090R\u2090) evaluated at 2 A and 50 A"]],
+      "Summary of answers to the end-of-exercise review questions.", "review_answers",
+      widths=[0.5, 2.3, 3.2], align_right_from=3, size=10)
+
+h3("6.2.1  Question 1 — speed and armature voltage")
+question("What kind of relationship exists between the speed and armature voltage of a "
+         "separately-excited dc motor?  (a) A linear relationship.  (b) A parabolic "
+         "relationship.  (c) An exponential relationship.  (d) The speed of the motor is "
+         "independent of the applied voltage.")
+answer("a", "A linear relationship.")
+para(f"With the field current held constant the flux is constant, so the induced voltage is "
+     f"proportional to speed through n = K\u2081E\u1d04\u1d07\u1d0d\u1da0. At no load the "
+     f"armature current is small and the ohmic drop I\u2090R\u2090 is negligible, so "
+     f"E\u1d04\u1d07\u1d0d\u1da0 ≈ E\u2090 and the speed is therefore proportional to the "
+     f"armature voltage. This was confirmed directly by the measurements of Section 5.2: graph "
+     f"G211 ({FR('g211')}) is a straight line and a least-squares fit through all eleven points "
+     f"returns R² = {R2_1:.4f}, with no measurable curvature that would indicate a parabolic or "
+     f"exponential law. Option (d) is contradicted by the data, in which the speed rose from "
+     f"0.08 r/min to 1581.36 r/min as the armature voltage was raised.")
+
+h3("6.2.2  Question 2 — torque and armature current")
+question("What kind of relationship exists between the torque and armature current of a "
+         "separately-excited dc motor as long as the armature current does not exceed the "
+         "nominal value?  (a) A linear relationship.  (b) A parabolic relationship.  (c) An "
+         "exponential relationship.  (d) The motor torque is independent of the current.")
+answer("a", "A linear relationship.")
+para(f"The developed torque is proportional to the product of the flux and the armature "
+     f"current. While the field current is held constant the flux is constant, so T = "
+     f"K\u2082I\u2090 with K\u2082 fixed. Section 5.3 confirms this: over the range up to "
+     f"1.5 A a least-squares fit returns R² = {R2_2:.4f} with K\u2082 = {K2_ls:.3f} N·m/A.")
+para("The qualification in the question is essential. Once the armature current exceeds the "
+     "nominal value the relationship ceases to be linear, because armature reaction reduces the "
+     "net flux per pole. That is exactly what the measurements show: at 3.95 A the developed "
+     "torque falls 36 % short of the linear extrapolation. The linear answer is therefore "
+     "correct only within the stated restriction, and Section 7.2 examines the departure "
+     "beyond it.")
+
+h3("6.2.3  Question 3 — determination of the armature resistance")
+question("Connecting a dc source to the armature of a dc motor that operates without field "
+         "current and measuring the voltage that produces nominal current flow in the armature "
+         "allows which parameter of the dc motor to be determined?  (a) The nominal armature "
+         "current.  (b) The nominal armature voltage.  (c) The armature resistance.  (d) The "
+         "resistance of the field winding.")
+answer("c", "The armature resistance.")
+para("Removing the field current removes the flux, so no back-EMF can be generated and "
+     "E\u1d04\u1d07\u1d0d\u1da0 = 0. The armature loop equation E\u2090 = "
+     "E\u1d04\u1d07\u1d0d\u1da0 + I\u2090R\u2090 then reduces to E\u2090 = I\u2090R\u2090, and "
+     "the ratio of the measured voltage to the measured current is the armature resistance. "
+     "Option (d) is wrong because the field winding is deliberately not energised and carries "
+     "no current, so nothing can be inferred about it. Options (a) and (b) are wrong because "
+     "the nominal current and voltage are ratings of the machine that are set by its design and "
+     "read from its nameplate, not results of this measurement — indeed the nominal current is "
+     "an input to the test rather than an output of it.")
+para(f"This is precisely the method applied in Section 5.1, which returned R\u2090 = "
+     f"{RA:.2f} Ω. The question also highlights the condition that was not properly satisfied "
+     f"in this exercise: the test must be performed at the nominal armature current. Because it "
+     f"was carried out at 0.507 A, the result is inflated by the non-linear brush contact drop, "
+     f"as analysed in Section 7.4.")
+
+h3("6.2.4  Question 4 — effect of armature current on speed")
+question("Does the speed of a separately-excited dc motor increase or decrease when the "
+         "armature current increases?  (a) It increases.  (b) It decreases.  (c) It stays the "
+         "same because speed is independent of motor current.  (d) The speed will oscillate "
+         "around the previous value.")
+answer("b", "It decreases.")
+para("At a fixed armature voltage, an increase in armature current increases the ohmic drop "
+     "I\u2090R\u2090 across the armature resistance. Since E\u1d04\u1d07\u1d0d\u1da0 = E\u2090 "
+     "− I\u2090R\u2090, the back-EMF must fall, and because the speed is proportional to the "
+     "back-EMF the speed falls with it. The measurements of Section 5.4 confirm this without "
+     "ambiguity: the speed decreased monotonically from 1501.52 r/min at 0.28 A to "
+     "1079.88 r/min at 3.95 A, a reduction of 28 %. Option (c) is contradicted by that "
+     "measurement, and option (d) describes an instability that was not observed — the speed "
+     "settled at a new steady value after each load increment.")
+
+h3("6.2.5  Question 5 — numerical calculation of no-load and full-load speed")
+question("The armature resistance R\u2090 and constant K\u2081 of a dc motor are 0.5 Ω and "
+         "5 r/min/V, respectively. A voltage of 200 V is applied to this motor. The no-load "
+         "armature current is 2 A. At full load, the armature current increases to 50 A. What "
+         "are the no-load and full-load speeds of the motor?  "
+         "(a) n_{NO LOAD} = 1005 r/min, n_{FULL LOAD} = 880 r/min.  "
+         "(b) n_{NO LOAD} = 995 r/min, n_{FULL LOAD} = 875 r/min.  "
+         "(c) n_{NO LOAD} = 1000 r/min, n_{FULL LOAD} = 875 r/min.  "
+         "(d) The speeds cannot be calculated without constant K\u2082.")
+answer("b", "n_{NO LOAD} = 995 r/min, n_{FULL LOAD} = 875 r/min.")
+para("Applying equations (1) and (2) at each load condition. At no load, with "
+     "I\u2090 = 2 A:")
+equation("E\u1d3f\u1d2c = I\u2090R\u2090 = 2 × 0.5 = 1 V", 11)
+equation("E\u1d04\u1d07\u1d0d\u1da0 = E\u2090 − E\u1d3f\u1d2c = 200 − 1 = 199 V", 12)
+equation("n = K\u2081E\u1d04\u1d07\u1d0d\u1da0 = 5 × 199 = 995 r/min", 13)
+para("At full load, with I\u2090 = 50 A:")
+equation("E\u1d3f\u1d2c = 50 × 0.5 = 25 V", 14)
+equation("E\u1d04\u1d07\u1d0d\u1da0 = 200 − 25 = 175 V", 15)
+equation("n = 5 × 175 = 875 r/min", 16)
+para("Option (c) is the trap for anyone who neglects the no-load ohmic drop: taking "
+     "E\u1d04\u1d07\u1d0d\u1da0 = E\u2090 = 200 V gives 5 × 200 = 1000 r/min, which ignores the "
+     "1 V lost across the armature resistance even at light load. Option (d) is wrong because "
+     "K\u2082 relates torque to current and plays no part in the speed calculation; the "
+     "armature currents are given directly, so the torque constant is not required.")
+para("The speed regulation of this hypothetical machine is (995 − 875) / 875 × 100 = 13.7 %, "
+     f"which is markedly worse than the {100*(1501.52-1412.45)/1412.45:.1f} % measured for the "
+     f"laboratory machine at 1.5 A. The comparison is instructive: the example motor drops "
+     f"25 V across its armature resistance at full load out of a 200 V supply, whereas the "
+     f"laboratory machine at 1.5 A drops only about 8 V out of 250 V.")
 
 # ------------------------------------------------------------------ 7.0 ----
 page_break()
@@ -711,7 +872,7 @@ para("Because equation (4) contains only two measured constants, the discrepancy
      "resistance is the suspect term. Treating equation (4) as a straight line in I\u2090 allows "
      "an effective armature resistance to be recovered from the machine's own loaded behaviour, "
      "since the gradient of that line is −K\u2081R\u2090 and its intercept is K\u2081E\u2090:")
-equation("R\u2090(effective) = − (dn / dI\u2090) / K\u2081", 11)
+equation("R\u2090(effective) = − (dn / dI\u2090) / K\u2081", 17)
 para(f"Applied to the 25 points below 1.5 A this returns R\u2090(effective) = {RA_eff:.2f} Ω, "
      f"roughly {100*RA_eff/RA:.0f} % of the {RA:.2f} Ω obtained in step 7. The same regression "
      f"provides a useful check on its own validity: its intercept of {DB:.1f} r/min corresponds "
@@ -942,6 +1103,7 @@ doc.settings.element.append(uf)
 
 doc.save(OUT)
 print(f"saved {OUT}  ({os.path.getsize(OUT)/1e6:.2f} MB)")
-print(f"figures: {_seq['Figure']}/{len(FIG_ORDER)}   tables: {_seq['Table']}/{len(TAB_ORDER)}")
+print(f"figures: {_seq['Figure']}/{len(FIG_ORDER)}   tables: {_seq['Table']}/{len(TAB_ORDER)}"
+      f"   equations: {_eqn[0]}")
 assert _seq['Figure'] == len(FIG_ORDER) and _seq['Table'] == len(TAB_ORDER)
 print(f"K1={K1:.3f}  K2={K2:.3f}  RA={RA:.2f}  RA_eff={RA_eff:.2f}  factor={FACTOR:.2f}")
