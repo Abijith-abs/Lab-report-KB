@@ -412,7 +412,7 @@ para("The resistance presented by the armature circuit includes the contact resi
      "carbon brushes, which is strongly non-linear: the voltage dropped across a brush contact "
      "is closer to a fixed value than to a quantity proportional to current. An ohmmeter injects "
      "a very small test current, so the fixed brush drop dominates the measurement and the "
-     "resistance is grossly over-read [2]. The accepted alternative is the direct-current "
+     "resistance is grossly over-read [2], [4]. The accepted alternative is the direct-current "
      "volt-ampere method, in which the field winding is left unexcited so that no flux and "
      "therefore no back-EMF is produced, the rotor is prevented from turning, and the armature "
      "voltage required to circulate the rated armature current is measured. Under those "
@@ -438,8 +438,11 @@ table(["Model", "Description", "Qty"],
        ["—",    "LVDAM-EMS software (Metering, Data Table and Graph windows)", "1"]],
       "Equipment used in the Laboratory 2 exercise.", "equipment",
       widths=[0.9, 4.2, 1.1], align_right_from=2, size=10)
-para("The data acquisition interface was configured with a scale of 800 V / 6 A on a 50 Hz "
-     "network, as shown in the status bar of every recorded screen capture in Appendix A.")
+para("All modules belong to the Lab-Volt 0.2 kW Electromechanical Training System, and the "
+     "exercise follows the procedure of Ex. 2-1, \u201cThe separately-excited DC motor\u201d, "
+     "in the manufacturer's courseware [3]. The data acquisition interface was configured with "
+     "a scale of 800 V / 6 A on a 50 Hz network, as shown in the status bar of every recorded "
+     "screen capture in Appendix A.")
 
 h2("3.2  Circuit configuration")
 para("The armature of the DC Motor/Generator was supplied from the variable DC output of the "
@@ -839,7 +842,7 @@ table(["I\u2090 (A)", "T measured (N·m)", "T linear model (N·m)", "Shortfall"]
       "Departure of the measured torque from the linear current-to-torque model "
       "(alternate points shown).", "ar_departure",
       widths=[1.2, 1.7, 1.8, 1.2], size=9.5)
-para("The accepted explanation is armature reaction [1], [2]. The current flowing in the "
+para("The accepted explanation is armature reaction [1], [2], [5]. The current flowing in the "
      "armature conductors creates a magneto-motive force of its own, which is oriented across "
      "the main field axis. Vectorially adding this cross-field to the main field distorts the "
      "resultant flux distribution, strengthening the flux at one pole tip and weakening it at "
@@ -901,9 +904,10 @@ h2("7.4  Validity of the armature resistance measurement")
 para("Two defects in the step 7 measurement account for the discrepancy identified above.")
 para("The first, and by far the more important, is the current at which the test was performed. "
      "The manual is explicit that the volt-ampere method must be carried out at the rated "
-     "armature current, precisely because the brush contact drop is not proportional to current. "
+     "armature current, precisely because the brush contact drop is not proportional to current; "
+     "IEEE Std 113 imposes the same requirement on the test [4]. "
      "A carbon brush contact behaves approximately as a fixed voltage drop of the order of one "
-     "to two volts per brush rather than as a fixed resistance, so the apparent resistance "
+     "to two volts per brush rather than as a fixed resistance [6], so the apparent resistance "
      "E\u2090/I\u2090 is inflated at low current and falls towards the true winding resistance "
      "as the current rises. The test was carried out at 0.507 A, whereas the torque "
      "characteristic of Section 7.2 indicates that the nominal armature current of this machine "
@@ -1033,15 +1037,19 @@ para("The most valuable outcome of the laboratory was this last point. A measure
 h1("9.0  References")
 for r in [
     "[1]\tS. J. Chapman, Electric Machinery Fundamentals, 5th ed. New York, NY, USA: "
-    "McGraw-Hill, 2012.",
+    "McGraw-Hill, 2012, ch. 8, pp. 533\u2013609. ISBN 978-0-07-352954-7.",
     "[2]\tSchool of Engineering, \u201cLaboratory session: DC machines — DC motors,\u201d "
     "ENS5230 Laboratory 2 manual, Edith Cowan University, Joondalup, WA, Australia, 2026.",
-    "[3]\tLab-Volt Ltd., DC Motors and Generators, Electromechanical Training System. "
-    "Quebec, Canada: Lab-Volt Ltd.",
-    "[4]\tA. E. Fitzgerald, C. Kingsley, and S. D. Umans, Electric Machinery, 6th ed. "
-    "New York, NY, USA: McGraw-Hill, 2003.",
-    "[5]\tP. C. Sen, Principles of Electric Machines and Power Electronics, 3rd ed. "
-    "Hoboken, NJ, USA: Wiley, 2013.",
+    "[3]\tFesto Didactic, \u201cEx. 2-1: The separately-excited DC motor,\u201d in AC/DC "
+    "Motors and Generators, Student Manual, LabVolt Series, order no. 30329-00, rev. "
+    "12/2014. Quebec, Canada: Festo Didactic Lt\u00e9e/Ltd, 2014. ISBN 978-2-89640-422-3. "
+    "[Online]. Available: https://lvsim.labvolt.com/Manuals/8006-1/30329_00.pdf",
+    "[4]\tIEEE Guide: Test Procedures for Direct-Current Machines, IEEE Std 113-1985, "
+    "Piscataway, NJ, USA: IEEE, 1985. doi: 10.1109/IEEESTD.1984.81710.",
+    "[5]\tA. E. Fitzgerald, C. Kingsley, and S. D. Umans, Electric Machinery, 6th ed. "
+    "New York, NY, USA: McGraw-Hill, 2003. ISBN 0-07-366009-4.",
+    "[6]\tP. C. Sen, Principles of Electric Machines and Power Electronics, 3rd ed. "
+    "Hoboken, NJ, USA: Wiley, 2013. ISBN 978-1-118-07887-7.",
 ]:
     p = doc.add_paragraph()
     p.paragraph_format.left_indent = Inches(0.4)
