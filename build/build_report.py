@@ -801,7 +801,8 @@ page_break()
 h1("7.0  Analysis and Discussion")
 h2("7.1  Validity of the linear voltage-to-speed model")
 para(f"The no-load characteristic is the cleanest result obtained in the exercise. With "
-     f"R² = {R2_1:.4f} across a range spanning nearly three decades of speed, there is no "
+     f"R² = {R2_1:.4f} across a speed range extending from 126 r/min to 1581 r/min, a more "
+     f"than twelvefold variation, there is no "
      f"measurable curvature in the data, which supports the assumption that the field flux "
      f"remained constant throughout. That assumption is independently corroborated by the "
      f"recorded field current, which held at 0.20–0.21 A across all eleven points.")
