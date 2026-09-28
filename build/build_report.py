@@ -25,7 +25,7 @@ DT211, DT212 = ns["DT211"], ns["DT212"]
 
 EA_R, IA_R = 14.44, 0.507
 RA   = EA_R / IA_R                 # 28.48 ohm
-EA14 = 255.73                      # armature voltage at n = 1500 r/min (step 14)
+EA14 = 255.73                      # nominal armature voltage: DT212 row 0 (step-14 meter read 254.7 V)
 LIN  = 1.50                        # upper limit of the linear torque region
 
 def linfit(xs, ys):
@@ -533,13 +533,20 @@ para(f"A least-squares regression through all eleven points gives a gradient of 
      f"calculations, as required by the laboratory procedure.")
 
 h2("5.3  Motor torque versus armature current (DT212 and G212)")
-para("The armature voltage required to produce a no-load speed of 1500 r/min was recorded in "
-     "step 14 as:")
-equation("E\u2090 = 255.73 V   at   n = 1500 r/min", 9)
+para("In step 14 the armature voltage was trimmed until the machine ran at the required no-load "
+     "speed of 1500 r/min. The live metering capture taken at that moment reads:")
+equation("E\u2090 = 254.7 V   at   n = 1501 r/min   (step 14, 09:23)", 9)
 picture(f"{FIG}/step14.png", 6.1,
-        "Metering and data table windows at step 14, showing the armature voltage of 255.73 V "
-        "corresponding to a no-load speed of 1501.52 r/min (09:23 on 2 September 2026).",
+        "Metering and data table windows at step 14, showing the armature voltage of 254.7 V "
+        "corresponding to a no-load speed of 1501 r/min (09:23 on 2 September 2026).",
         "step14")
+para(f"When logging of DT212 began eight minutes later the first row was recorded as "
+     f"E\u2090 = 255.73 V at 1501.52 r/min, 1.0 V above the step 14 meter reading. The two "
+     f"values describe the same operating point and differ by only 0.4 %, the discrepancy "
+     f"being one more instance of the supply drift discussed in Section 7.6. Because every "
+     f"subsequent calculation is made against the DT212 dataset, it is the logged value of "
+     f"255.73 V that is carried through this report as the nominal armature voltage, so that "
+     f"the constants and the data they are derived from remain mutually consistent.")
 para(f"The brake torque was then increased in increments while the armature voltage was held at "
      f"this value. Forty operating points were recorded, reproduced in {TR('dt212')}.")
 table(["#", "E\u2090 (V)", "I\u2090 (A)", "I\uff26 (A)", "P_IN (W)", "T (N·m)",
@@ -588,8 +595,9 @@ para("Both characteristics fall monotonically: the speed decreases steadily as e
 
 h2("5.5  Predicted speed droop (step 19)")
 para(f"Using the measured armature resistance R\u2090 = {RA:.2f} Ω, the voltage-to-speed "
-     f"constant K\u2081 = {K1:.3f} r/min/V and the armature voltage E\u2090 = 255.73 V recorded "
-     f"in step 14, the speed was predicted at the three specified armature currents from "
+     f"constant K\u2081 = {K1:.3f} r/min/V and the nominal armature voltage E\u2090 = 255.73 V logged "
+     f"as the first row of DT212, the speed was predicted at the three specified armature "
+     f"currents from "
      f"E\u1d3f\u1d2c = I\u2090R\u2090, E\u1d04\u1d07\u1d0d\u1da0 = E\u2090 − E\u1d3f\u1d2c and "
      f"n = K\u2081E\u1d04\u1d07\u1d0d\u1da0.")
 table(["Local AC network", "240 V\u1d00\u1d04", "240 V\u1d00\u1d04", "240 V\u1d00\u1d04"],
@@ -876,8 +884,8 @@ equation("R\u2090(effective) = − (dn / dI\u2090) / K\u2081", 17)
 para(f"Applied to the 25 points below 1.5 A this returns R\u2090(effective) = {RA_eff:.2f} Ω, "
      f"roughly {100*RA_eff/RA:.0f} % of the {RA:.2f} Ω obtained in step 7. The same regression "
      f"provides a useful check on its own validity: its intercept of {DB:.1f} r/min corresponds "
-     f"to an armature voltage of {EA_impl:.2f} V, which agrees with the {EA14:.2f} V actually "
-     f"measured in step 14 to within {abs(EA_impl-EA14):.2f} V. The fit therefore recovers the "
+     f"to an armature voltage of {EA_impl:.2f} V, which agrees with the {EA14:.2f} V logged at the "
+     f"first DT212 operating point to within {abs(EA_impl-EA14):.2f} V. The fit therefore recovers the "
      f"one parameter that is independently known, which gives confidence that the resistance it "
      f"returns is also meaningful. {FR('droop_model')} shows the consequence directly: the "
      f"measured points lie close to the curve computed with the smaller resistance and well "
@@ -1080,7 +1088,8 @@ _app = [
      "09:12 — Graph G211, motor speed as a function of armature voltage."),
     (f"{LS}/Screenshot 2026-09-02 092337.png",
      "09:23 — Step 14: armature voltage set to give a no-load speed of 1500 r/min. "
-     "E arm. 255.73 V, speed 1501.52 r/min, recorded as the first row of DT212."),
+     "E arm. 254.7 V, speed 1501 r/min. Logging of DT212 began at 09:31 with a first row of "
+     "255.73 V and 1501.52 r/min."),
     (f"{LS}/Screenshot 2026-09-02 093106.png",
      "09:31 — Data table DT212 complete, showing all forty loaded operating points from 0.28 A "
      "to 3.95 A. This is the dataset used throughout Sections 5 and 7."),
